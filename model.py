@@ -123,11 +123,20 @@ class GPT(nn.Module):
         assert config.block_size is not None
         self.config = config
 
+        attention_blocks = []
+        last_layer = None
+        for n in range(config.n_layer):
+            if n in [4,5]:
+                attention_blocks.append(last_layer)
+            else:
+                last_layer = Block(config)
+                attention_blocks.append(last_layer)
+
         self.transformer = nn.ModuleDict(dict(
             wte = nn.Embedding(config.vocab_size, config.n_embd),
             wpe = nn.Embedding(config.block_size, config.n_embd),
             drop = nn.Dropout(config.dropout),
-            h = nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
+            h = nn.ModuleList(attention_blocks),
             ln_f = LayerNorm(config.n_embd, bias=config.bias),
         ))
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
