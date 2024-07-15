@@ -127,9 +127,9 @@ def get_batch(split):
     y3 = torch.stack([torch.from_numpy((data[i+3:i+3+block_size]).astype(np.int64)) for i in ix])
     if device_type == 'cuda':
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
-        x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True), y2.pin_memory().to(device, non_blocking=True), y3.pin_memory().to(device, non_blocking=True)
+        x, y, y2, y3 = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True), y2.pin_memory().to(device, non_blocking=True), y3.pin_memory().to(device, non_blocking=True)
     else:
-        x, y = x.to(device), y.to(device), y2.to(device), y3.to(device)
+        x, y, y2, y3 = x.to(device), y.to(device), y2.to(device), y3.to(device)
     return x, y, y2, y3
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
