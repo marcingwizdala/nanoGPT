@@ -45,11 +45,11 @@ wandb_project = 'GPT-nano'
 wandb_run_name = 'gpt2-reused-layers-345' # 'run' + str(time.time())
 # data
 dataset = 'openwebtext'
-gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
-batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
+gradient_accumulation_steps = 5 * 8 * 2 # used to simulate larger batch sizes
+batch_size = 6 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 1024
 # model
-n_layer = 8
+n_layer = 10
 n_head = 8
 n_embd = 512
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
@@ -220,12 +220,15 @@ def estimate_loss():
     model.eval()
     for split in ['train', 'val']:
         losses = torch.zeros(eval_iters)
+        total_losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y, Y2, Y3 = get_batch(split)
             with ctx:
                 logits, loss, total_loss = model(X, Y, Y2, Y3)
             losses[k] = loss.item()
+            total_losses[k] = total_loss.item()
         out[split] = losses.mean()
+        out[split + '_total'] = total_losses.mean()
     model.train()
     return out
 
@@ -270,6 +273,8 @@ while True:
                 "iter": iter_num,
                 "train/loss": losses['train'],
                 "val/loss": losses['val'],
+                "train/loss_total": losses['train_total'],
+                "val/loss_total": losses['val_total'],
                 "lr": lr,
                 "mfu": running_mfu*100, # convert to percentage
             })
